@@ -22,7 +22,6 @@ public final class DataIO {
             BufferedReader br = new BufferedReader(new InputStreamReader(input));
             StringBuilder sb = new StringBuilder();
             String line = br.readLine();
-            points.add(new Point(0,0,0));
             int i = 0;
 
             while (line != null) {
@@ -53,7 +52,6 @@ public final class DataIO {
             BufferedReader br = new BufferedReader(new InputStreamReader(input));
             StringBuilder sb = new StringBuilder();
             String line = br.readLine();
-            points.add(new Point(0,0,0));
             int i = 0;
 
             while (line != null) {

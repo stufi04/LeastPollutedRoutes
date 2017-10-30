@@ -1,5 +1,4 @@
 import javax.servlet.ServletContext;
-import javax.xml.crypto.Data;
 import java.util.*;
 
 /**
@@ -33,7 +32,8 @@ public final class GraphNetwork {
                 else return 1;
             }
         });
-        queue.add(points.get(source));
+        Point s = points.get(source-1);
+        queue.add(s);
 
         double[] pollution = new double[100001];
         int[] parent = new int[100001];
@@ -41,7 +41,7 @@ public final class GraphNetwork {
 
         Arrays.fill(pollution, 3000000000.0);
 
-        pollution[source] = points.get(source).getPollution();
+        pollution[source] = s.getPollution();
 
         while(!queue.isEmpty()) {
 
@@ -53,10 +53,11 @@ public final class GraphNetwork {
 
             for(Integer i : neighbors.get(curNode)) {
                 if (!settled[i]) {
-                    if (pollution[i] > pollution[curNode]+points.get(i).getPollution()) {
-                        pollution[i] = pollution[curNode]+points.get(i).getPollution();
+                    Point neighbor = points.get(i-1);
+                    if (pollution[i] > pollution[curNode]+neighbor.getPollution()) {
+                        pollution[i] = pollution[curNode]+neighbor.getPollution();
                         parent[i] = curNode;
-                        queue.add(points.get(i));
+                        queue.add(neighbor);
                     }
                 }
             }
@@ -68,7 +69,7 @@ public final class GraphNetwork {
 
     }
 
-    public static double dijkstraByDistance() {
+    /*public static double dijkstraByDistance() {
 
         PriorityQueue<Integer> queue = new PriorityQueue<>();
         queue.add(source);
@@ -104,7 +105,7 @@ public final class GraphNetwork {
         route = GraphNetwork.saveRouteNodes(points, target, parent);
         return dist[target];
 
-    }
+    }*/
 
     public static String saveRouteNodes (List<Point> points, int target, int[] parent) {
 
@@ -121,14 +122,21 @@ public final class GraphNetwork {
 
     //public static void main(String[] args) {
 
-    public static void initialiseGraph(ServletContext context) {
+    public static void initialiseGraph(ServletContext context, double lat1, double lng1, double lat2, double lng2) {
 
         DataIO.setContext(context);
 
         points = DataIO.readPointsWithID();
         neighbors = DataIO.readAdjacencyList();
-        GraphNetwork.setSource(3554);
-        GraphNetwork.setTarget(12212);
+
+        KDTree kdTree = new KDTree(points, true);
+        Point s = kdTree.findNearest(lat1, lng1, true);
+        Point t = kdTree.findNearest(lat2, lng2, true);
+        source = s.getIndex();
+        target = t.getIndex();
+
+        GraphNetwork.setSource(source);
+        GraphNetwork.setTarget(target);
 
         //print the list of neighbors
 
