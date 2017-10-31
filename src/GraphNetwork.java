@@ -112,7 +112,7 @@ public final class GraphNetwork {
         String str = "";
         int curNode = target;
         while (curNode != 0) {
-            str += points.get(curNode).getLatitute() + " " + points.get(curNode).getLongitude() + "\n";
+            str += points.get(curNode-1).getLatitute() + " " + points.get(curNode-1).getLongitude() + "\n";
             curNode = parent[curNode];
         }
         return str;
@@ -127,6 +127,7 @@ public final class GraphNetwork {
         DataIO.setContext(context);
 
         points = DataIO.readPointsWithID();
+        //points = DataIO.readPointsWithPollution();
         neighbors = DataIO.readAdjacencyList();
 
         List<Point> connectedPoints = new ArrayList<>();

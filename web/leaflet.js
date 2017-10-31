@@ -3,6 +3,8 @@
  */
 
 var mymap;
+var marker1 = null;
+var marker2 = null;
 
 function initialiseMap() {
 
@@ -82,7 +84,10 @@ function getRoute(lat1, lng1, lat2, lng2) {
         }
         debugger;
         L.polyline(route, {color: 'red'}).addTo(mymap);
-        L.marker(route[0]).addTo(mymap);
+        marker1 = L.marker(route[0]);
+        marker1.addTo(mymap);
+        marker2 = L.marker(route[route.length-1]);
+        marker2.addTo(mymap);
     });
 }
 
@@ -97,4 +102,6 @@ function clearMap() {
             }
         }
     }
+    if (marker1 != null) mymap.removeLayer(marker1);
+    if (marker2 != null) mymap.removeLayer(marker2);
 }
