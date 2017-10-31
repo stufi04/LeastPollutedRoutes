@@ -60,6 +60,7 @@ function getCoordinates() {
         fromLat = data.results[0].geometry.location.lat;
         fromLng = data.results[0].geometry.location.lng;
         $.get(urlTo, function( data ) {
+            debugger;
             toLat = data.results[0].geometry.location.lat;
             toLng = data.results[0].geometry.location.lng;
             getRoute(fromLat, fromLng, toLat, toLng);
@@ -74,11 +75,14 @@ function getRoute(lat1, lng1, lat2, lng2) {
     $.post(url, {lat1: lat1, lng1: lng1, lat2: lat2, lng2: lng2}, function( data ) {
         clearMap();
         var values = data.match(/[^\s]+/g);
+        debugger;
         var route = [];
         for (var i = 0; i < values.length; i+=2) {
             route.push([values[i], values[i+1]]);
         }
-        L.polyline(route).addTo(mymap);
+        debugger;
+        L.polyline(route, {color: 'red'}).addTo(mymap);
+        L.marker(route[0]).addTo(mymap);
     });
 }
 

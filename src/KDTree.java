@@ -10,6 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class KDTree {
 
+    public int numNodes;
     public double division;
     public Point median;
     public KDTree leftChild = null, rightChild = null;
@@ -18,8 +19,15 @@ public class KDTree {
     KDTree(List<Point> nodes, boolean axis) {
 
         int n = nodes.size();
+        numNodes = n;
 
-        if (n <= 1) return;
+        System.out.println(n + " nodes at current level");
+
+        if (n==0) return;
+        if (n == 1) {
+            median = nodes.get(0);
+            return;
+        }
 
         // get up to 20 random nodes to estimate median from
         List<Point> randomNodes = new ArrayList<>();
@@ -33,13 +41,13 @@ public class KDTree {
         if (axis) {
             Collections.sort(randomNodes, new Comparator<Point>() {
                 public int compare(Point p1, Point p2) {
-                    return new Double(p1.getLatitute()).compareTo(new Double(p2.getLatitute()));
+                    return Double.compare(p1.getLatitute(), p2.getLatitute());
                 }
             });
         } else {
             Collections.sort(randomNodes, new Comparator<Point>() {
                 public int compare(Point p1, Point p2) {
-                    return new Double(p1.getLongitude()).compareTo(new Double(p2.getLongitude()));
+                    return Double.compare(p1.getLongitude(), p2.getLongitude());
                 }
             });
         }
@@ -49,15 +57,23 @@ public class KDTree {
         if (axis) division = median.getLatitute();
         else division = median.getLongitude();
 
+        if (n==2) {
+            System.out.println(
+                    randomNodes.get(0).getLatitute() + ", " + randomNodes.get(0).getLongitude() + "     " +
+                            randomNodes.get(1).getLatitute() + ", " + randomNodes.get(1).getLongitude()
+            );
+            System.out.println(axis + " " + division);
+        }
+
         // divide points accordint to median
         List<Point> leftNodes = new ArrayList<>(), rightNodes = new ArrayList<>();
         for(int i=0; i<n; i++) {
             if (axis) {
                 if (nodes.get(i).getLatitute() < division) leftNodes.add(nodes.get(i));
-                else rightNodes.add(nodes.get(i));
+                else if (nodes.get(i).getLatitute() > division) rightNodes.add(nodes.get(i));
             } else {
                 if (nodes.get(i).getLongitude() < division) leftNodes.add(nodes.get(i));
-                else rightNodes.add(nodes.get(i));
+                else if (nodes.get(i).getLongitude() > division) rightNodes.add(nodes.get(i));
             }
         }
 
@@ -70,15 +86,16 @@ public class KDTree {
 
     public Point findNearest(double lat, double lng, boolean axis) {
 
-        if (leftChild == null && rightChild == null) {
-            curBest = Math.min(curBest, (lat - median.getLatitute())*(lat - median.getLatitute()) + (lng - median.getLongitude())*(lng - median.getLongitude()));
+        if (numNodes == 1) {
+            double newBest = (lat - median.getLatitute())*(lat - median.getLatitute()) + (lng - median.getLongitude())*(lng - median.getLongitude());
+            curBest = Math.min(curBest, newBest);
             return median;
         }
 
-        if (leftChild == null) {
+        if (leftChild == null || leftChild.numNodes == 0) {
             return rightChild.findNearest(lat, lng, !axis);
         }
-        if (rightChild == null) {
+        if (rightChild == null || rightChild.numNodes == 0) {
             return leftChild.findNearest(lat, lng, !axis);
         }
 

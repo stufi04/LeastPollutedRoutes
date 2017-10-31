@@ -57,8 +57,8 @@ public final class DataIO {
             while (line != null) {
                 i++;
                 String[] nums = line.split("\\s+");
-                double latitude = Double.parseDouble(nums[1]);
-                double longitude = Double.parseDouble(nums[2]);
+                double latitude = Double.parseDouble(nums[2]);
+                double longitude = Double.parseDouble(nums[1]);
                 double pollution = 30 * r.nextDouble();
                 Point p = new Point(latitude, longitude, pollution);
                 p.setIndex(i);

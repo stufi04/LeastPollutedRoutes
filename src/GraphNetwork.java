@@ -28,8 +28,7 @@ public final class GraphNetwork {
 
         PriorityQueue<Point> queue = new PriorityQueue<>(11, new Comparator<Point>() {
             public int compare(Point p1, Point p2) {
-                if (p1.getTotalPollution() < p2.getTotalPollution()) return 0;
-                else return 1;
+                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
             }
         });
         Point s = points.get(source-1);
@@ -56,6 +55,7 @@ public final class GraphNetwork {
                     Point neighbor = points.get(i-1);
                     if (pollution[i] > pollution[curNode]+neighbor.getPollution()) {
                         pollution[i] = pollution[curNode]+neighbor.getPollution();
+                        neighbor.setTotalPollution(pollution[i]);
                         parent[i] = curNode;
                         queue.add(neighbor);
                     }
@@ -112,7 +112,7 @@ public final class GraphNetwork {
         String str = "";
         int curNode = target;
         while (curNode != 0) {
-            str += points.get(curNode).getLongitude() + " " + points.get(curNode).getLatitute() + "\n";
+            str += points.get(curNode).getLatitute() + " " + points.get(curNode).getLongitude() + "\n";
             curNode = parent[curNode];
         }
         return str;
@@ -129,7 +129,14 @@ public final class GraphNetwork {
         points = DataIO.readPointsWithID();
         neighbors = DataIO.readAdjacencyList();
 
-        KDTree kdTree = new KDTree(points, true);
+        List<Point> connectedPoints = new ArrayList<>();
+        for (Point p : points) {
+            int idx = p.getIndex();
+            List<Integer> curNeighbors = neighbors.get(idx);
+            if (curNeighbors != null && !curNeighbors.isEmpty()) connectedPoints.add(p);
+        }
+
+        KDTree kdTree = new KDTree(connectedPoints, true);
         Point s = kdTree.findNearest(lat1, lng1, true);
         Point t = kdTree.findNearest(lat2, lng2, true);
         source = s.getIndex();
