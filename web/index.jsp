@@ -23,15 +23,21 @@
     To:<br>
     <input type="text" name="to" id="to"><br>
   <br>
-  <button type="submit">Search</button>
+  <button type="submit" id="submit" disabled>Search</button>
 </form>
 <br>
 <div id="mapid"></div>
 <script>
-    initialiseMap();
-    $("#form").submit(function(event) {
-        event.preventDefault();
-        getCoordinates();
+  debugger;
+    var url = "http://localhost:9999/initialize";
+    $.get(url, function( data ) {
+        initialiseMap();
+        $('#submit').removeAttr('disabled');
+        $("#form").submit(function(event) {
+            debugger;
+            event.preventDefault();
+            getCoordinates();
+        });
     });
 </script>
 </body>

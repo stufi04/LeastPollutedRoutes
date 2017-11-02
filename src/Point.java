@@ -14,10 +14,15 @@ public class Point {
     }
 
     public double getDistance(Point p) {
+        return Math.sqrt(getSquaredDistance(p));
+
+    }
+
+    public double getSquaredDistance(Point p) {
 
         double x = latitute - p.getLatitute();
         double y = longitude - p.getLongitude();
-        return Math.sqrt(x*x + y*y);
+        return x*x + y*y;
 
     }
 

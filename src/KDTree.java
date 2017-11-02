@@ -14,14 +14,13 @@ public class KDTree {
     public double division;
     public Point median;
     public KDTree leftChild = null, rightChild = null;
-    public static double curBest = 1000000.0;
 
     KDTree(List<Point> nodes, boolean axis) {
 
         int n = nodes.size();
         numNodes = n;
 
-        System.out.println(n + " nodes at current level");
+        //System.out.println(n + " nodes at current level");
 
         if (n==0) return;
         if (n == 1) {
@@ -57,24 +56,20 @@ public class KDTree {
         if (axis) division = median.getLatitute();
         else division = median.getLongitude();
 
-        if (n==2) {
-            System.out.println(
-                    randomNodes.get(0).getLatitute() + ", " + randomNodes.get(0).getLongitude() + "     " +
-                            randomNodes.get(1).getLatitute() + ", " + randomNodes.get(1).getLongitude()
-            );
-            System.out.println(axis + " " + division);
-        }
-
-        // divide points accordint to median
+        // divide points according to median
         List<Point> leftNodes = new ArrayList<>(), rightNodes = new ArrayList<>();
         for(int i=0; i<n; i++) {
             if (axis) {
                 if (nodes.get(i).getLatitute() < division) leftNodes.add(nodes.get(i));
-                else if (nodes.get(i).getLatitute() > division) rightNodes.add(nodes.get(i));
+                else rightNodes.add(nodes.get(i));
             } else {
                 if (nodes.get(i).getLongitude() < division) leftNodes.add(nodes.get(i));
-                else if (nodes.get(i).getLongitude() > division) rightNodes.add(nodes.get(i));
+                else rightNodes.add(nodes.get(i));
             }
+        }
+
+        if (leftNodes.size() + rightNodes.size() != nodes.size()) {
+            System.out.println("FUCK");
         }
 
         // recursively create child nodes
@@ -87,8 +82,6 @@ public class KDTree {
     public Point findNearest(double lat, double lng, boolean axis) {
 
         if (numNodes == 1) {
-            double newBest = (lat - median.getLatitute())*(lat - median.getLatitute()) + (lng - median.getLongitude())*(lng - median.getLongitude());
-            curBest = Math.min(curBest, newBest);
             return median;
         }
 
@@ -106,20 +99,20 @@ public class KDTree {
         } else {
             coordinate = lng;
         }
-        distanceToBorder = Math.abs(coordinate - division) * Math.abs(coordinate - division);
+        distanceToBorder = (coordinate - division) * (coordinate - division);
 
         KDTree firstAttempt = leftChild, secondAttempt = rightChild;
-        if (coordinate > division) {
+        if (coordinate >= division) {
             firstAttempt = rightChild;
             secondAttempt = leftChild;
         }
 
         curNearest = firstAttempt.findNearest(lat, lng, !axis);
+        double curBest = (lat - curNearest.getLatitute())*(lat - curNearest.getLatitute()) + (lng - curNearest.getLongitude()) * (lng - curNearest.getLongitude());
         if (distanceToBorder <= curBest) {
             newNearest = secondAttempt.findNearest(lat, lng, !axis);
             double newBest = (lat - newNearest.getLatitute())*(lat - newNearest.getLatitute()) + (lng - newNearest.getLongitude())*(lng - newNearest.getLongitude());
-            if (newBest < curBest ) {
-                curBest = newBest;
+            if (newBest < curBest) {
                 curNearest = newNearest;
             }
         }

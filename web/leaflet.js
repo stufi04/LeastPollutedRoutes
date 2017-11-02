@@ -8,6 +8,7 @@ var marker2 = null;
 
 function initialiseMap() {
 
+    debugger;
     $("#from").geocomplete();
     $("#to").geocomplete();
     mymap = L.map('mapid').setView([55.944, -3.196], 14.5);

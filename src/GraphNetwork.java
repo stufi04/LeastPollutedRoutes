@@ -9,6 +9,7 @@ public final class GraphNetwork {
     private static List<Point> points = new ArrayList<>();
     private static Map<Integer, List<Integer>> neighbors = new HashMap<Integer, List<Integer>>();
     private static int source, target;
+    private static KDTree kdTree;
     public static String route;
 
     public static void setSource (int s) {
@@ -122,7 +123,7 @@ public final class GraphNetwork {
 
     //public static void main(String[] args) {
 
-    public static void initialiseGraph(ServletContext context, double lat1, double lng1, double lat2, double lng2) {
+    public static void initialiseGraph(ServletContext context) {
 
         DataIO.setContext(context);
 
@@ -137,7 +138,12 @@ public final class GraphNetwork {
             if (curNeighbors != null && !curNeighbors.isEmpty()) connectedPoints.add(p);
         }
 
-        KDTree kdTree = new KDTree(connectedPoints, true);
+        kdTree = new KDTree(connectedPoints, true);
+
+    }
+
+    public static void findRoute(double lat1, double lng1, double lat2, double lng2) {
+
         Point s = kdTree.findNearest(lat1, lng1, true);
         Point t = kdTree.findNearest(lat2, lng2, true);
         source = s.getIndex();
@@ -146,30 +152,14 @@ public final class GraphNetwork {
         GraphNetwork.setSource(source);
         GraphNetwork.setTarget(target);
 
-        //print the list of neighbors
-
-//        for (Integer i : graphNetwork.neighbors.keySet()) {
-//            Point p = graphNetwork.points.get(i);
-//            System.out.print( p.getLatitute() + ", " + p.getLongitude() + ": ");
-//            for (Integer j : graphNetwork.neighbors.get(i)) {
-//                Point neighbor = graphNetwork.points.get(j);
-//                System.out.print("(" + neighbor.getLatitute() + ", " + neighbor.getLongitude() + ") ");
-//            }
-//            System.out.println("");
-//        }
-
         double leastPollution = GraphNetwork.dijkstraByPollution();
 
-        //System.out.println(leastPollution);
+        // print source, target and distances between actual user input points
+            System.out.println(source + "");
+//        System.out.println(lat1 + " " + lng1 + " " + lat2 + " " + lng2);
+//        System.out.println(s.getLatitute() + " " + s.getLongitude() + " " + t.getLatitute() + " " + t.getLongitude());
+//        System.out.println((lat1-s.getLatitute())*(lat1-s.getLatitute())+(lng1-s.getLongitude())*(lng1-s.getLongitude()) + " " + (lat2-t.getLatitute())*(lat2-t.getLatitute())+(lng2-t.getLongitude())*(lng2-t.getLongitude()));
 
-        /*String csvFile = "data/data1.csv";
-        graphNetwork.readCSV(csvFile);
-
-        graphNetwork.createGeoJSON();
-
-        for(Point p : graphNetwork.points) {
-            System.out.println("(" + p.getLatitute() + ", " + p.getLongitude() + "), pollution: " + p.getPollution());
-        }*/
     }
 
 }

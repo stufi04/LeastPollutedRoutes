@@ -23,9 +23,7 @@ public class RoutingServlet extends HttpServlet {
         Double lat2 = Double.parseDouble(request.getParameter("lat2"));
         Double lng2 = Double.parseDouble(request.getParameter("lng2"));
 
-        ServletContext context = getServletContext();
-        GraphNetwork.initialiseGraph(context, lat1, lng1, lat2, lng2);
-
+        GraphNetwork.findRoute(lat1, lng1, lat2, lng2);
         response.getWriter().write(GraphNetwork.getRoute());
 
     }
