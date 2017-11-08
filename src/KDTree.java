@@ -68,10 +68,6 @@ public class KDTree {
             }
         }
 
-        if (leftNodes.size() + rightNodes.size() != nodes.size()) {
-            System.out.println("FUCK");
-        }
-
         // recursively create child nodes
         leftChild = new KDTree(leftNodes, !axis);
         rightChild = new KDTree(rightNodes, !axis);

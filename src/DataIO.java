@@ -48,13 +48,16 @@ public final class DataIO {
         try {
 
             Random r = new Random();
+
             InputStream input = context.getResourceAsStream("/WEB-INF/data/nodes1.txt");
             BufferedReader br = new BufferedReader(new InputStreamReader(input));
             StringBuilder sb = new StringBuilder();
+
             String line = br.readLine();
             int i = 0;
 
             while (line != null) {
+
                 i++;
                 String[] nums = line.split("\\s+");
                 double latitude = Double.parseDouble(nums[2]);
@@ -65,6 +68,7 @@ public final class DataIO {
                 points.add(p);
                 line = br.readLine();
             }
+
         } catch (Exception e) {
         }
 

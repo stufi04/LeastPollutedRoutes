@@ -21,12 +21,24 @@ function initialiseMap() {
 
 }
 
-// function getRouteFromFile() {
+function initialiseHeatmap(data) {
+
+    var values = data.match(/[^\s]+/g);
+    var points = [];
+    for (var i = 0; i < values.length; i+=3) {
+        points.push([values[i], values[i+1], values[i+2]]);
+    }
+    var heat = L.heatLayer(points, {radius: 10, blur: 15, max: 30.0, gradient: {0.2: 'green', 0.4: 'lime', 0.6: 'yellow', 0.8: 'orange', 1.0: 'red'}})
+        .addTo(mymap);
+
+}
+
+//  function getPollutionFromFile() {
 //
-//     var allText = null;
+//      var allText = null;
 //
-//     var rawFile = new XMLHttpRequest();
-//     rawFile.open("GET", 'WEB-INF/data/route.txt', false);
+//      var rawFile = new XMLHttpRequest();
+//      rawFile.open("GET", 'WEB-INF/data/polluted_nodes1.txt', false);
 //     rawFile.onreadystatechange = function ()
 //     {
 //         if(rawFile.readyState === 4)
@@ -40,11 +52,11 @@ function initialiseMap() {
 //     rawFile.send(null);
 //
 //     var values = allText.match(/[^\s]+/g);
-//     var route = [];
-//     for (var i = 0; i < values.length; i+=2) {
-//         route.push([values[i], values[i+1]]);
+//     var nodes = [];
+//     for (var i = 0; i < values.length; i+=3) {
+//         nodes.push([values[i], values[i+1], values[i+2]]);
 //     }
-//     return route;
+//     return nodes;
 //
 // }
 
@@ -78,13 +90,12 @@ function getRoute(lat1, lng1, lat2, lng2) {
     $.post(url, {lat1: lat1, lng1: lng1, lat2: lat2, lng2: lng2}, function( data ) {
         clearMap();
         var values = data.match(/[^\s]+/g);
-        debugger;
         var route = [];
         for (var i = 0; i < values.length; i+=2) {
             route.push([values[i], values[i+1]]);
         }
+        L.polyline(route, {color: 'blue'}).addTo(mymap);
         debugger;
-        L.polyline(route, {color: 'red'}).addTo(mymap);
         marker1 = L.marker(route[0]);
         marker1.addTo(mymap);
         marker2 = L.marker(route[route.length-1]);

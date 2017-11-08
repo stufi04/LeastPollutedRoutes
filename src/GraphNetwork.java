@@ -120,6 +120,14 @@ public final class GraphNetwork {
 
     }
 
+    public static String getNodesWithPollution() {
+        String str = "";
+        for (Point p : points) {
+            str += p.getLatitute() + " " + p.getLongitude() + " " + p.getPollution() + "\n";
+        }
+        return str;
+    }
+
 
     //public static void main(String[] args) {
 
@@ -155,7 +163,6 @@ public final class GraphNetwork {
         double leastPollution = GraphNetwork.dijkstraByPollution();
 
         // print source, target and distances between actual user input points
-            System.out.println(source + "");
 //        System.out.println(lat1 + " " + lng1 + " " + lat2 + " " + lng2);
 //        System.out.println(s.getLatitute() + " " + s.getLongitude() + " " + t.getLatitute() + " " + t.getLongitude());
 //        System.out.println((lat1-s.getLatitute())*(lat1-s.getLatitute())+(lng1-s.getLongitude())*(lng1-s.getLongitude()) + " " + (lat2-t.getLatitute())*(lat2-t.getLatitute())+(lng2-t.getLongitude())*(lng2-t.getLongitude()));

@@ -19,6 +19,7 @@ public class StartServlet extends HttpServlet {
     {
         ServletContext context = getServletContext();
         GraphNetwork.initialiseGraph(context);
+        response.getWriter().write(GraphNetwork.getNodesWithPollution());
     }
 
 }

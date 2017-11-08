@@ -15,6 +15,7 @@
     <script src="jquery.geocomplete.js"></script>
 
     <script src="leaflet.js"></script>
+    <script src="leaflet-heat.js"></script>
 </head>
 <body>
 <form id="form">
@@ -32,9 +33,9 @@
     var url = "http://localhost:9999/initialize";
     $.get(url, function( data ) {
         initialiseMap();
+        initialiseHeatmap(data);
         $('#submit').removeAttr('disabled');
         $("#form").submit(function(event) {
-            debugger;
             event.preventDefault();
             getCoordinates();
         });
