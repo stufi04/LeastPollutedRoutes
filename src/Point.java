@@ -13,7 +13,27 @@ public class Point {
         this.pollution = pollution;
     }
 
-    public double getDistance(Point p) {
+    public Double getHarvesineDistance(Point p) {
+        final int R = 6371; // Radius of the earth
+        Double lat1 = latitute;
+        Double lon1 = longitude;
+        Double lat2 = p.getLatitute();
+        Double lon2 = p.getLongitude();
+        Double latDistance = toRad(lat2-lat1);
+        Double lonDistance = toRad(lon2-lon1);
+        Double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                        Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        Double distance = R * c;
+        return distance;
+    }
+
+    private static Double toRad(Double value) {
+        return value * Math.PI / 180;
+    }
+
+    /*public double getDistance(Point p) {
         return Math.sqrt(getSquaredDistance(p));
 
     }
@@ -24,7 +44,7 @@ public class Point {
         double y = longitude - p.getLongitude();
         return x*x + y*y;
 
-    }
+    }*/
 
     public double getLatitute() {
         return latitute;

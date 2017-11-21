@@ -62,7 +62,11 @@ public final class DataIO {
                 String[] nums = line.split("\\s+");
                 double latitude = Double.parseDouble(nums[2]);
                 double longitude = Double.parseDouble(nums[1]);
+                //double pollution = 2;
+                //if (longitude < -3.194139 || longitude > -3.187981) pollution = 30;
+                //if (latitude < 55.943608 || latitude > 55.945963) pollution = 30;
                 double pollution = 30 * r.nextDouble();
+                //double pollution = i%30;
                 Point p = new Point(latitude, longitude, pollution);
                 p.setIndex(i);
                 points.add(p);

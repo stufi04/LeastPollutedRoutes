@@ -28,7 +28,8 @@ function initialiseHeatmap(data) {
     for (var i = 0; i < values.length; i+=3) {
         points.push([values[i], values[i+1], values[i+2]]);
     }
-    var heat = L.heatLayer(points, {radius: 10, blur: 15, max: 30.0, gradient: {0.2: 'green', 0.4: 'lime', 0.6: 'yellow', 0.8: 'orange', 1.0: 'red'}})
+    debugger;
+    var heat = L.heatLayer(points, {radius: 10, blur: 15, max: 30.0, gradient: {0.25: 'green', 0.5: 'lime', 0.75: 'yellow', 1.0: 'red'}})
         .addTo(mymap);
 
 }
@@ -95,6 +96,7 @@ function getRoute(lat1, lng1, lat2, lng2) {
             route.push([values[i], values[i+1]]);
         }
         L.polyline(route, {color: 'blue'}).addTo(mymap);
+        console.log(route);
         debugger;
         marker1 = L.marker(route[0]);
         marker1.addTo(mymap);
