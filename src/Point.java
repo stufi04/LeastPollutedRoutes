@@ -6,6 +6,7 @@ public class Point {
     private int index, id;
     private double latitute, longitude, pollution;
     private double totalPollution;
+    public static int[][] fakeDistances = new int[16][16];
 
     Point (double latitute, double longitude, double pollution) {
         this.latitute = latitute;
@@ -45,6 +46,10 @@ public class Point {
         return x*x + y*y;
 
     }*/
+
+    public double getFakeDistance(Point p) {
+        return fakeDistances[this.getIndex()][p.getIndex()];
+    }
 
     public double getLatitute() {
         return latitute;

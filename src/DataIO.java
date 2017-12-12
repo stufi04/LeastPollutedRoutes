@@ -138,6 +138,28 @@ public final class DataIO {
         return neighbors;
     }
 
+    /*public static void readFakeDistances() {
+
+        try {
+            InputStream input = context.getResourceAsStream("/WEB-INF/data/fakedistances.txt");
+            BufferedReader br = new BufferedReader(new InputStreamReader(input));
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                String[] nums = line.split("\\s+");
+                int p1 = Integer.parseInt(nums[0]);
+                int p2 = Integer.parseInt(nums[1]);
+                int d = Integer.parseInt(nums[2]);
+                Point.fakeDistances[p1][p2] = d;
+                Point.fakeDistances[p2][p1] = d;
+                line = br.readLine();
+            }
+        } catch (Exception e) {
+        }
+
+    }*/
+
     public static List<Point> readCSV(String csvFile) {
 
         List<Point> points = new ArrayList<>();

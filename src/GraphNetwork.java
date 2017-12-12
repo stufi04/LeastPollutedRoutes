@@ -131,6 +131,8 @@ public final class GraphNetwork {
 
     public static double dijkstraByDistance() {
 
+        long startTime = System.currentTimeMillis();
+
         PriorityQueue<Point> queue = new PriorityQueue<>(11, new Comparator<Point>() {
             public int compare(Point p1, Point p2) {
                 return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
@@ -171,11 +173,24 @@ public final class GraphNetwork {
         }
 
         route = GraphNetwork.saveRouteNodes(points, target, parent);
+
+        long endTime = System.currentTimeMillis();
+        System.out.println(endTime-startTime);
+
         return dist[target];
 
     }
 
+    static double[] dist_forward = new double[100001];
+    static double[] dist_backward = new double[100001];
+    static int[] parent_forward = new int[100001];
+    static int[] parent_backward = new int[100001];
+    static boolean[] settled_forward = new boolean[100001];
+    static boolean[] settled_backward = new boolean[100001];
+
     public static double bidirectionalDijkstraByDistance() {
+
+        long startTime = System.currentTimeMillis();
 
         PriorityQueue<Point> queue_forward = new PriorityQueue<>(11, new Comparator<Point>() {
             public int compare(Point p1, Point p2) {
@@ -191,13 +206,6 @@ public final class GraphNetwork {
         Point t = points.get(target-1);
         queue_forward.add(s);
         queue_backward.add(t);
-
-        double[] dist_forward = new double[100001];
-        double[] dist_backward = new double[100001];
-        int[] parent_forward = new int[100001];
-        int[] parent_backward = new int[100001];
-        boolean[] settled_forward = new boolean[100001];
-        boolean[] settled_backward = new boolean[100001];
 
         Arrays.fill(dist_forward, 3000000000.0);
         Arrays.fill(dist_backward, 3000000000.0);
@@ -216,12 +224,17 @@ public final class GraphNetwork {
             if (queue_forward.isEmpty() && queue_backward.isEmpty()) break;
 
             if (turnFlag) {
+                //dijkstraIteration(queue_forward, dist_forward, parent_forward, settled_forward);
                 Point p = queue_forward.poll();
                 Integer curNode = p.getIndex();
+                while (settled_forward[curNode]) {
+                    p = queue_forward.poll();
+                    curNode = p.getIndex();
+                }
                 settled_forward[curNode] = true;
 
                 if (settled_backward[curNode] == true) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode] - p.getPollution();
+                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode]; //-p.getPollution()
                     meetingPoint = curNode;
                     break;
                 }
@@ -241,10 +254,14 @@ public final class GraphNetwork {
             } else {
                 Point p = queue_backward.poll();
                 Integer curNode = p.getIndex();
+                while (settled_backward[curNode]) {
+                    p = queue_backward.poll();
+                    curNode = p.getIndex();
+                }
                 settled_backward[curNode] = true;
 
                 if (settled_forward[curNode] == true) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode] - p.getPollution();
+                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode]; // - p.getPollution();
                     meetingPoint = curNode;
                     break;
                 }
@@ -255,7 +272,7 @@ public final class GraphNetwork {
                         Double d = p.getHarvesineDistance(neighbor);
                         if (dist_backward[i] > dist_backward[curNode] + d) {
                             dist_backward[i] = dist_backward[curNode] + d;
-                            neighbor.setTotalPollution(dist_forward[i]);
+                            neighbor.setTotalPollution(dist_backward[i]);
                             parent_backward[i] = curNode;
                             queue_backward.add(neighbor);
                         }
@@ -271,8 +288,10 @@ public final class GraphNetwork {
             Point p = queue_forward.poll();
             Integer curNode = p.getIndex();
             for(Integer i : neighbors.get(curNode)) {
-                if (shortestPathLength > dist_forward[curNode] + dist_backward[i]) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[i];
+                Point neighbor = points.get(i-1);
+                Double d = p.getHarvesineDistance(neighbor);
+                if (shortestPathLength > dist_forward[curNode] + dist_backward[i] + d) {
+                    shortestPathLength = dist_forward[curNode] + dist_backward[i] + d;
                     parent_forward[i] = curNode;
                     meetingPoint = i;
                 }
@@ -282,8 +301,10 @@ public final class GraphNetwork {
             Point p = queue_backward.poll();
             Integer curNode = p.getIndex();
             for(Integer i : neighbors.get(curNode)) {
-                if (shortestPathLength > dist_backward[curNode] + dist_forward[i]) {
-                    shortestPathLength = dist_backward[curNode] + dist_forward[i];
+                Point neighbor = points.get(i-1);
+                Double d = p.getHarvesineDistance(neighbor);
+                if (shortestPathLength > dist_backward[curNode] + dist_forward[i] + d) {
+                    shortestPathLength = dist_backward[curNode] + dist_forward[i] + d;
                     parent_forward[i] = curNode;
                     meetingPoint = i;
                 }
@@ -291,7 +312,15 @@ public final class GraphNetwork {
         }
 
         route = saveRouteNodesReversed(points, meetingPoint, parent_backward) + GraphNetwork.saveRouteNodes(points, meetingPoint, parent_forward);
+
+        long endTime = System.currentTimeMillis();
+        System.out.println("Execution time: " + (endTime-startTime));
+
         return shortestPathLength;
+
+    }
+
+    public static void dijkstraIteration() {
 
     }
 
@@ -340,6 +369,7 @@ public final class GraphNetwork {
         points = DataIO.readPointsWithID();
         //points = DataIO.readPointsWithPollution();
         neighbors = DataIO.readAdjacencyList();
+        //DataIO.readFakeDistances();
 
         List<Point> connectedPoints = new ArrayList<>();
         for (Point p : points) {
@@ -364,7 +394,7 @@ public final class GraphNetwork {
 
         double leastPollution = GraphNetwork.bidirectionalDijkstraByDistance();
 
-        System.out.println(leastPollution);
+        System.out.println("Least pollution: " + leastPollution);
 
         // print source, target and distances between actual user input points
 //        System.out.println(lat1 + " " + lng1 + " " + lat2 + " " + lng2);
