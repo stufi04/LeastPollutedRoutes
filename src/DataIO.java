@@ -51,7 +51,6 @@ public final class DataIO {
 
             InputStream input = context.getResourceAsStream("/WEB-INF/data/nodes1.txt");
             BufferedReader br = new BufferedReader(new InputStreamReader(input));
-            StringBuilder sb = new StringBuilder();
 
             String line = br.readLine();
             int i = 0;
@@ -62,11 +61,12 @@ public final class DataIO {
                 String[] nums = line.split("\\s+");
                 double latitude = Double.parseDouble(nums[2]);
                 double longitude = Double.parseDouble(nums[1]);
-                //double pollution = 2;
-                //if (longitude < -3.194139 || longitude > -3.187981) pollution = 30;
-                //if (latitude < 55.943608 || latitude > 55.945963) pollution = 30;
-                //double pollution = 30 * r.nextDouble();
-                double pollution = i%30;
+                //double pollution = 2;                                                      // same pollution everywhere
+                //if (longitude < -3.194139 || longitude > -3.187981) pollution = 30;        // a less polluted horizontal strip
+                //if (latitude < 55.943608 || latitude > 55.945963) pollution = 30;          // a less polluted vertical strip
+                //double pollution = 30 * r.nextDouble();                                    // random pollution everytime
+                //double pollution = i%30;                                                   // semi-random pollution that doesn't change
+                double pollution = 100;                                                      // initial big pollution, to be used with road properties extracted from OSM
                 Point p = new Point(latitude, longitude, pollution);
                 p.setIndex(i);
                 points.add(p);
@@ -77,6 +77,35 @@ public final class DataIO {
         }
 
         return points;
+    }
+
+    public static List<Point> generatePollutionAccordingToRoads(List<Point> points) {
+
+        try {
+
+            InputStream input = context.getResourceAsStream("/WEB-INF/data/roads.txt");
+            BufferedReader br = new BufferedReader(new InputStreamReader(input));
+
+            String line = br.readLine();
+
+            while (line != null) {
+
+                String[] nums = line.split("\\s+");
+                String roadType = nums[0];
+
+                for(int i=1;i<nums.length;i++) {
+                    int node = Integer.parseInt(nums[i]);
+                    points.get(node-1).setPollutionAccordingToRoad(roadType);
+                }
+
+                line = br.readLine();
+            }
+
+        } catch (Exception e) {
+        }
+
+        return points;
+
     }
 
     public static Map<Integer, List<Integer>> readEdges() {

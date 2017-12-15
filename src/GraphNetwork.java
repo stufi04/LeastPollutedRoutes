@@ -632,6 +632,7 @@ public final class GraphNetwork {
 
         points = DataIO.readPointsWithID();
         //points = DataIO.readPointsWithPollution();
+        points = DataIO.generatePollutionAccordingToRoads(points);
         neighbors = DataIO.readAdjacencyList();
         //DataIO.readFakeDistances();
 

@@ -98,4 +98,52 @@ public class Point {
     public void setId(int id) {
         this.id = id;
     }
+
+    public void setPollutionAccordingToRoad(String r) {
+        switch (r) {
+            case "motorway":case "motorway_link":case "raceway":case "construction":
+                this.setPollution(90);
+                break;
+            case "trunk":case "trunk_link":
+                this.setPollution(80);
+                break;
+            case "primary":case "primary_link":
+                this.setPollution(70);
+                break;
+            case "secondary":case "secondary_link":
+                this.setPollution(60);
+                break;
+            case "tertiary":case "tertiary_link":
+                this.setPollution(50);
+                break;
+            case "unclassified":case "bus_guideway":
+                this.setPollution(40);
+                break;
+            case "residential":
+                this.setPollution(25);
+                break;
+            case "service":case "escape":
+                this.setPollution(25);
+                break;
+            case "living_street":
+                this.setPollution(15);
+                break;
+            case "pedestrian":
+                this.setPollution(10);
+                break;
+            case "footway":case "bridleway":case "steps":
+                this.setPollution(5);
+                break;
+            case "path":case "cycleway":
+                this.setPollution(3);
+                break;
+            case "track":
+                this.setPollution(1);
+                break;
+            default:
+                this.setPollution(100);
+
+        }
+    }
+
 }
