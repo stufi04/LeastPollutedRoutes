@@ -11,6 +11,7 @@ function initialiseMap() {
     debugger;
     $("#from").geocomplete();
     $("#to").geocomplete();
+    $(".student-home").geocomplete();
     mymap = L.map('mapid').setView([55.944, -3.196], 14.5);
     L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
         attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
@@ -85,6 +86,28 @@ function getCoordinates() {
     
 }
 
+function getHomeCoordinates() {
+
+    var list = [];
+    var homes = $('.student-home').length - 1;
+    var num = 0;
+
+    $('.student-home').each(function(i, obj) {
+        var address = $(this).val();
+        var url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + address + "&key=AIzaSyADAJ0ArZEIKttCc6530AInhzjyH5JDMgY";
+        $.get(url, function( data ) {
+            num++;
+            var lat = data.results[0].geometry.location.lat;
+            var lng = data.results[0].geometry.location.lng;
+            list.push(lat);
+            list.push(lng);
+            if (num == homes) {
+                getRoutesToUniversity(list);
+            }
+        });
+    });
+}
+
 function getRoute(lat1, lng1, lat2, lng2) {
 
     var url = "http://localhost:9999/getroute";
@@ -103,6 +126,31 @@ function getRoute(lat1, lng1, lat2, lng2) {
         marker2 = L.marker(route[route.length-1]);
         marker2.addTo(mymap);
     });
+}
+
+function getRoutesToUniversity(list) {
+
+    var url = "http://localhost:9999/getroutestouni";
+    var route;
+    $.post(url, {list: JSON.stringify(list)}, function(data) {
+        clearMap();
+        debugger;
+        var dividedByHomes = data.split('@');
+        for (var i = 0; i < dividedByHomes.length; i++) {
+            var values = dividedByHomes[i].match(/[^\s]+/g);
+            route = [];
+            for (var j = 0; j < values.length; j+=2) {
+                route.push([values[j], values[j+1]]);
+            }
+            L.polyline(route, {color: 'blue'}).addTo(mymap);
+            marker1 = L.marker(route[0]);
+            marker1.addTo(mymap);
+            marker2 = L.marker(route[route.length-1]);
+            marker2.addTo(mymap);
+        }
+        debugger;
+    });
+
 }
 
 function clearMap() {

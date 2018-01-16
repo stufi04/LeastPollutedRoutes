@@ -16,6 +16,16 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>HomesToUni</servlet-name>
+        <servlet-class>HomesToUniServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>HomesToUni</servlet-name>
+        <url-pattern>/getroutestouni</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>Start</servlet-name>
         <servlet-class>StartServlet</servlet-class>
     </servlet>

@@ -668,4 +668,29 @@ public final class GraphNetwork {
 
     }
 
+    public static String getRoutesFromHomesToUni(String str) {
+
+        String routes = "";
+
+        Point library = kdTree.findNearest(55.942856, -3.189039, true);
+        source = library.getIndex();
+
+        str = str.substring(1, str.length()-1);
+        String[] nums = str.split(",");
+
+        for(int i=0;i<nums.length;i+=2) {
+            double lat = Double.parseDouble(nums[i]);
+            double lng = Double.parseDouble(nums[i+1]);
+            Point home = kdTree.findNearest(lat, lng, true);
+            target = home.getIndex();
+            GraphNetwork.setSource(source);
+            GraphNetwork.setTarget(target);
+            double leastPollution = GraphNetwork.bidirectionalAStar();
+            routes += route + "@";
+        }
+
+        return routes;
+
+    }
+
 }
