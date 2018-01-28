@@ -9,12 +9,15 @@ public final class GraphNetwork {
     private static List<Point> points = new ArrayList<>();
     private static Map<Integer, List<Integer>> neighbors = new HashMap<Integer, List<Integer>>();
     private static int source, target;
-    private static KDTree kdTree;
+    private static KDTree kdTree, airspecksTree;
     public static String route;
     public static ArrayList<Point> routePoints;
     public static int routeNodesNum = 0;
     public static ArrayList<ArrayList<Point>> separateRoutes = new ArrayList<>();
     public static List<Point> airspeckPositions = new ArrayList<>();
+    public static List<Point> finalAirspecks = new ArrayList<>();
+    private static double circleRadius = 0, circleCenterX = 0, circleCenterY = 0;
+    private static int allowedAirspecks = 3;
 
     public static void setSource (int s) {
         source = s;
@@ -694,11 +697,14 @@ public final class GraphNetwork {
 
         str = str.substring(1, str.length()-1);
         String[] nums = str.split(",");
+        double maxDist = 0;
 
         for(int i=0;i<nums.length;i+=2) {
             double lat = Double.parseDouble(nums[i]);
             double lng = Double.parseDouble(nums[i+1]);
             Point home = kdTree.findNearest(lat, lng, true);
+            double dist = home.getHarvesineDistance(library);
+            if (dist > maxDist) maxDist = dist;
             target = home.getIndex();
             GraphNetwork.setSource(source);
             GraphNetwork.setTarget(target);
@@ -708,6 +714,10 @@ public final class GraphNetwork {
             Collections.reverse(routePoints);
             separateRoutes.add(routePoints);
         }
+
+        circleRadius = maxDist/2;
+        circleCenterX = library.getLatitute();
+        circleCenterY = library.getLongitude();
 
         String airspecks = findAirspeckPositions(separateRoutes);
         return routes.substring(0,routes.length()-1) + "X" + airspecks;
@@ -725,8 +735,26 @@ public final class GraphNetwork {
 
         recSplit(0, a);
 
+        airspecksTree = new KDTree(airspeckPositions, true);
+
+        double minDist = 0;
+        for(int angle = 0; angle < 360/allowedAirspecks; angle += 10) {
+
+            List<Point> currentAirspecks = new ArrayList<>();
+            double curDist = 0;
+            for (int i = 0; i < allowedAirspecks ; i++){
+                double x = circleCenterX + circleRadius * Math.cos(2 * Math.PI * i / allowedAirspecks + angle);
+                double y = circleCenterY + circleRadius * Math.sin(2 * Math.PI * i / allowedAirspecks + angle);
+                Point p = airspecksTree.findNearest(x, y, true);
+                curDist += Math.sqrt((x - p.getLatitute())*(x - p.getLatitute()) + (y - p.getLongitude())*(y - p.getLongitude()));
+                currentAirspecks.add(p);
+            }
+            if (minDist == 0 || minDist > curDist) {minDist = curDist; finalAirspecks = currentAirspecks;}
+
+        }
+
         String str = "";
-        for (Point p : airspeckPositions) {
+        for (Point p : finalAirspecks) {
             str += p.getLatitute() + " " + p.getLongitude() + "\n";
         }
 
