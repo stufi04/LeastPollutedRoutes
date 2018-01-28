@@ -151,7 +151,8 @@ function getRoutesToUniversity(list) {
 
     var url = "http://localhost:9999/getroutestouni";
     var route;
-    $.post(url, {list: JSON.stringify(list)}, function(data) {
+    var airspecks = $('#airspecks').val();
+    $.post(url, {list: JSON.stringify(list), airspecks: airspecks}, function(data) {
         clearMap();
         debugger;
         var divideRoutesAndAispecks = data.split('X');

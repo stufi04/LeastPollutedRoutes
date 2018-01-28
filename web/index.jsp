@@ -66,6 +66,18 @@
             <div class="form-group row">
 
                 <div class="col-sm-1">
+                    <label class="control-label">No. of Airspecks</label>
+                </div>
+
+                <div>
+                    <input type="text" class="col-sm-5 form-control airspecks" id="airspecks"/>
+                </div>
+
+            </div>
+
+            <div class="form-group row">
+
+                <div class="col-sm-1">
                     <label class="control-label">Student home</label>
                 </div>
 
@@ -154,12 +166,12 @@
         $('.nav-tabs a').on('shown.bs.tab', function(event){
             clearMap();
         });
-        //var pollutionGridUrl = "https://875b2652.ngrok.io/kriging_full";
-       // $.get(pollutionGridUrl, function(pollutionGrid) {
-       //     debugger;
+
+        var pollutionGridUrl = "http://702bb49e.ngrok.io/kriging_full";
+        $.get(pollutionGridUrl, function(pollutionGrid) {
+            debugger;
             var url = "http://localhost:9999/initialize";
-       //     $.post(url, {pollutionGrid: JSON.stringify(pollutionGrid)}, function( data ) {
-        $.get(url, function(data) {
+            $.post(url, {pollutionGrid: JSON.stringify(pollutionGrid)}, function( data ) {
                 debugger;
                 initialiseMap();
                 //initialiseHeatmap(data);
@@ -173,7 +185,7 @@
                     getHomeCoordinates();
                 });
             });
-        //});
+        });
     </script>
 
   </div>

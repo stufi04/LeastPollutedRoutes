@@ -19,8 +19,9 @@ public class HomesToUniServlet extends HttpServlet {
     {
 
         String str = request.getParameter("list");
+        String airspecksNum = request.getParameter("airspecks");
 
-        response.getWriter().write(GraphNetwork.getRoutesFromHomesToUniAndAirspeckPositions(str));
+        response.getWriter().write(GraphNetwork.getRoutesFromHomesToUniAndAirspeckPositions(str, airspecksNum));
 
     }
 

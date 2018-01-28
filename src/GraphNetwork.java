@@ -685,7 +685,9 @@ public final class GraphNetwork {
 
     }
 
-    public static String getRoutesFromHomesToUniAndAirspeckPositions(String str) {
+    public static String getRoutesFromHomesToUniAndAirspeckPositions(String str, String airspecksNum) {
+
+        allowedAirspecks = Integer.parseInt(airspecksNum);
 
         separateRoutes.clear();
         airspeckPositions.clear();
