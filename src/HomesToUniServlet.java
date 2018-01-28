@@ -20,7 +20,7 @@ public class HomesToUniServlet extends HttpServlet {
 
         String str = request.getParameter("list");
 
-        response.getWriter().write(GraphNetwork.getRoutesFromHomesToUni(str));
+        response.getWriter().write(GraphNetwork.getRoutesFromHomesToUniAndAirspeckPositions(str));
 
     }
 

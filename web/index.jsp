@@ -154,20 +154,26 @@
         $('.nav-tabs a').on('shown.bs.tab', function(event){
             clearMap();
         });
-        var url = "http://localhost:9999/initialize";
-        $.get(url, function( data ) {
-            initialiseMap();
-            //initialiseHeatmap(data);
-            $('#submit').removeAttr('disabled');
-            $("#form").submit(function(event) {
-                event.preventDefault();
-                getCoordinates();
+        //var pollutionGridUrl = "https://875b2652.ngrok.io/kriging_full";
+       // $.get(pollutionGridUrl, function(pollutionGrid) {
+       //     debugger;
+            var url = "http://localhost:9999/initialize";
+       //     $.post(url, {pollutionGrid: JSON.stringify(pollutionGrid)}, function( data ) {
+        $.get(url, function(data) {
+                debugger;
+                initialiseMap();
+                //initialiseHeatmap(data);
+                $('#submit').removeAttr('disabled');
+                $("#form").submit(function(event) {
+                    event.preventDefault();
+                    getCoordinates();
+                });
+                $("#homesForm").submit(function(event) {
+                    event.preventDefault();
+                    getHomeCoordinates();
+                });
             });
-            $("#homesForm").submit(function(event) {
-                event.preventDefault();
-                getHomeCoordinates();
-            });
-        });
+        //});
     </script>
 
   </div>

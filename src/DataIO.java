@@ -261,4 +261,28 @@ public final class DataIO {
 
     }
 
+    public static List<Point> getPointsFromRawGrid (String pollutionGrid) {
+
+        List<Point> gridPoints = new ArrayList<>();
+        pollutionGrid = pollutionGrid.substring(2, pollutionGrid.length()-2);
+        String[] nums = pollutionGrid.split("\\],\\[");
+        for (int i = 0; i<nums.length; i++) {
+            String[] curNums = nums[i].split(",");
+            double latitude = Double.parseDouble(curNums[0]);
+            double longitude = Double.parseDouble(curNums[1]);
+            double pollution = Double.parseDouble(curNums[2]);
+            Point p = new Point(latitude, longitude, pollution);
+            gridPoints.add(p);
+        }
+        return gridPoints;
+
+    }
+
+    public static List<Point> getPollutionFromGridTree (List<Point> points, KDTree gridTree) {
+        for (Point p : points) {
+            Point nearest = gridTree.findNearest(p.getLatitute(), p.getLongitude(), true);
+            p.setPollution(nearest.getPollution());
+        }
+        return points;
+    }
 }

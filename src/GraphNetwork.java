@@ -11,7 +11,10 @@ public final class GraphNetwork {
     private static int source, target;
     private static KDTree kdTree;
     public static String route;
+    public static ArrayList<Point> routePoints;
     public static int routeNodesNum = 0;
+    public static ArrayList<ArrayList<Point>> separateRoutes = new ArrayList<>();
+    public static List<Point> airspeckPositions = new ArrayList<>();
 
     public static void setSource (int s) {
         source = s;
@@ -594,6 +597,7 @@ public final class GraphNetwork {
         int curNode = target;
         while (curNode != 0) {
             str += points.get(curNode-1).getLatitute() + " " + points.get(curNode-1).getLongitude() + "\n";
+            routePoints.add(points.get(curNode-1));
             curNode = parent[curNode];
             routeNodesNum++;
         }
@@ -607,6 +611,7 @@ public final class GraphNetwork {
         int curNode = parent[target];
         while (curNode != 0) {
             str = points.get(curNode-1).getLatitute() + " " + points.get(curNode-1).getLongitude() + "\n" + str;
+            routePoints.add(0, points.get(curNode-1));
             curNode = parent[curNode];
             routeNodesNum++;
         }
@@ -626,13 +631,21 @@ public final class GraphNetwork {
 
     //public static void main(String[] args) {
 
-    public static void initialiseGraph(ServletContext context) {
+    public static void initialiseGraph(ServletContext context, String pollutionGrid) {
 
         DataIO.setContext(context);
 
         points = DataIO.readPointsWithID();
         //points = DataIO.readPointsWithPollution();
-        points = DataIO.generatePollutionAccordingToRoads(points);
+        //points = DataIO.generatePollutionAccordingToRoads(points);
+        if (pollutionGrid == null || pollutionGrid.isEmpty()) {
+            points = DataIO.generatePollutionAccordingToRoads(points);
+        } else {
+            List<Point> gridPoints = DataIO.getPointsFromRawGrid(pollutionGrid);
+            KDTree gridTree = new KDTree(gridPoints, true);
+            points = DataIO.getPollutionFromGridTree(points, gridTree);
+
+        }
         neighbors = DataIO.readAdjacencyList();
         //DataIO.readFakeDistances();
 
@@ -657,6 +670,7 @@ public final class GraphNetwork {
         GraphNetwork.setSource(source);
         GraphNetwork.setTarget(target);
 
+        routePoints = new ArrayList<>();
         double leastPollution = GraphNetwork.bidirectionalAStar();
 
         System.out.println("Least pollution: " + leastPollution);
@@ -668,7 +682,10 @@ public final class GraphNetwork {
 
     }
 
-    public static String getRoutesFromHomesToUni(String str) {
+    public static String getRoutesFromHomesToUniAndAirspeckPositions(String str) {
+
+        separateRoutes.clear();
+        airspeckPositions.clear();
 
         String routes = "";
 
@@ -685,11 +702,102 @@ public final class GraphNetwork {
             target = home.getIndex();
             GraphNetwork.setSource(source);
             GraphNetwork.setTarget(target);
+            routePoints = new ArrayList<>();
             double leastPollution = GraphNetwork.bidirectionalAStar();
             routes += route + "@";
+            Collections.reverse(routePoints);
+            separateRoutes.add(routePoints);
         }
 
-        return routes;
+        String airspecks = findAirspeckPositions(separateRoutes);
+        return routes.substring(0,routes.length()-1) + "X" + airspecks;
+
+    }
+
+    public static String findAirspeckPositions (ArrayList<ArrayList<Point>> routes) {
+
+        int n = routes.size();
+
+        List<Integer> a = new ArrayList<Integer>();
+        for(int i=0;i<n;i++) {
+            a.add(i);
+        }
+
+        recSplit(0, a);
+
+        String str = "";
+        for (Point p : airspeckPositions) {
+            str += p.getLatitute() + " " + p.getLongitude() + "\n";
+        }
+
+        return str;
+    }
+
+    public static void recSplit (int pos, List<Integer> routes) {
+
+        if (routes.size() == 1) return;
+
+        short[] used = new short[1024];
+        for (int i=0; i<routes.size(); i++)
+            used[i] = 0;
+
+        while(true) {
+
+            pos++;
+
+            boolean breakpoint = false;
+            List<Integer> a = new ArrayList<Integer>();
+            for(int i=0; i<routes.size(); i++) {
+                if (separateRoutes.get(routes.get(i)).size() != pos) {
+                    a.add(i);
+                } else {
+                    breakpoint = true;
+                }
+            }
+            if (breakpoint) {
+                Point curP = separateRoutes.get(routes.get(0)).get(pos-1);
+                curP.setCrossingPaths(1);
+                airspeckPositions.add(curP);
+                recSplit(pos, a);
+                break;
+            }
+
+            boolean crossing = false;
+
+            for (int i=0; i<routes.size(); i++) {
+                for (int j=i+1; j<routes.size(); j++) {
+                    if (separateRoutes.get(routes.get(i)).get(pos).getIndex() != separateRoutes.get(routes.get(j)).get(pos).getIndex()) {
+                        crossing = true;
+                        break;
+                    }
+                    if (crossing) break;
+                }
+            }
+
+            if (!crossing) continue;
+
+            int cnt=0;
+            for (int i=0; i<routes.size(); i++) {
+                if (used[i] != 0) continue;
+                cnt++;
+                a.clear();
+                a.add(routes.get(i));
+                for (int j=i+1; j<routes.size(); j++) {
+                    if (separateRoutes.get(routes.get(i)).get(pos).getIndex() == separateRoutes.get(routes.get(j)).get(pos).getIndex()) {
+                        used[j] = 1;
+                        a.add(routes.get(j));
+                    }
+                }
+                recSplit(pos, a);
+            }
+
+            Point curP = separateRoutes.get(routes.get(0)).get(pos-1);
+            curP.setCrossingPaths(cnt);
+            airspeckPositions.add(curP);
+
+            break;
+
+        }
 
     }
 

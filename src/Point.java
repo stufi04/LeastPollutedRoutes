@@ -3,7 +3,7 @@
  */
 public class Point {
 
-    private int index, id;
+    private int index, id, crossingPaths;
     private double latitute, longitude, pollution;
     private double totalPollution;
     public static int[][] fakeDistances = new int[16][16];
@@ -89,6 +89,14 @@ public class Point {
 
     public void setIndex(int index) {
         this.index = index;
+    }
+
+    public int getCrossingPaths() {
+        return crossingPaths;
+    }
+
+    public void setCrossingPaths(int crossingPaths) {
+        this.crossingPaths = crossingPaths;
     }
 
     public int getId() {
