@@ -1,12 +1,8 @@
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 /**
  * Created by st.ivanov44 on 25/10/2017.
@@ -23,8 +19,8 @@ public class RoutingServlet extends HttpServlet {
         Double lat2 = Double.parseDouble(request.getParameter("lat2"));
         Double lng2 = Double.parseDouble(request.getParameter("lng2"));
 
-        GraphNetwork.findRoute(lat1, lng1, lat2, lng2);
-        response.getWriter().write(GraphNetwork.getRoute());
+        String str = GraphNetwork.findRoute(lat1, lng1, lat2, lng2);
+        response.getWriter().write(str);
 
     }
 

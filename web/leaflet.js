@@ -65,6 +65,8 @@ function initialiseHeatmap(data) {
 
 function getCoordinates() {
 
+    debugger;
+
     var addressFrom =  $('#from').val();
     var addressTo = $('#to').val();
 
@@ -74,6 +76,7 @@ function getCoordinates() {
     var fromLat, fromLng, toLat, toLng;
 
     $.get(urlFrom, function( data ) {
+        debugger;
         fromLat = data.results[0].geometry.location.lat;
         fromLng = data.results[0].geometry.location.lng;
         $.get(urlTo, function( data ) {
@@ -119,18 +122,29 @@ function getRoute(lat1, lng1, lat2, lng2) {
     var url = "http://localhost:9999/getroute";
     $.post(url, {lat1: lat1, lng1: lng1, lat2: lat2, lng2: lng2}, function( data ) {
         clearMap();
-        var values = data.match(/[^\s]+/g);
+        var dividedRoutes = data.split('X');
+
+        var values = dividedRoutes[0].match(/[^\s]+/g);
         var route = [];
         for (var i = 0; i < values.length; i+=2) {
             route.push([values[i], values[i+1]]);
         }
         L.polyline(route, {color: 'blue'}).addTo(mymap);
-        console.log(route);
-        debugger;
+
+        if ($('#shortest').is(':checked')) {
+            values = dividedRoutes[1].match(/[^\s]+/g);
+            route = [];
+            for (var i = 0; i < values.length; i += 2) {
+                route.push([values[i], values[i + 1]]);
+            }
+            L.polyline(route, {color: 'red'}).addTo(mymap);
+        }
+
         marker1 = L.marker(route[0]);
         marker1.addTo(mymap);
         marker2 = L.marker(route[route.length-1]);
         marker2.addTo(mymap);
+
     });
 }
 

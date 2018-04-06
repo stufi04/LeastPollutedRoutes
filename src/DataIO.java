@@ -64,9 +64,9 @@ public final class DataIO {
                 //double pollution = 2;                                                      // same pollution everywhere
                 //if (longitude < -3.194139 || longitude > -3.187981) pollution = 30;        // a less polluted horizontal strip
                 //if (latitude < 55.943608 || latitude > 55.945963) pollution = 30;          // a less polluted vertical strip
-                //double pollution = 30 * r.nextDouble();                                    // random pollution everytime
+                double pollution = 30 * r.nextDouble();                                    // random pollution everytime
                 //double pollution = i%30;                                                   // semi-random pollution that doesn't change
-                double pollution = 100;                                                      // initial big pollution, to be used with road properties extracted from OSM
+                //double pollution = 100;                                                      // initial big pollution, to be used with road properties extracted from OSM
                 Point p = new Point(latitude, longitude, pollution);
                 p.setIndex(i);
                 points.add(p);
@@ -222,7 +222,7 @@ public final class DataIO {
             curNode = parent[curNode];
         }
         try{
-            String path = context.getRealPath("WEB-INF/data/route.txt");
+            String path = context.getRealPath("WEB-INF/data/routeString.txt");
             File file = new File(path);
             PrintWriter writer = new PrintWriter(file);
             writer.println(str);

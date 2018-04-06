@@ -50,6 +50,12 @@
               </div>
           </div>
 
+          <div>
+              <input type="checkbox" id="shortest">
+              <label for="shortest">Show shortest path</label>
+          </div>
+          <br>
+
           <div class="form-group row">
               <div class="col-sm-12">
                   <button type="submit" id="submit" class="btn btn-default" disabled>Search</button>
@@ -167,10 +173,10 @@
             clearMap();
         });
 
-        var pollutionGridUrl = "http://702bb49e.ngrok.io/kriging_full";
+        var pollutionGridUrl = "https://b42ba416.ngrok.io/kriging_full";
         $.get(pollutionGridUrl, function(pollutionGrid) {
-            debugger;
             var url = "http://localhost:9999/initialize";
+            //pollutionGrid = null;
             $.post(url, {pollutionGrid: JSON.stringify(pollutionGrid)}, function( data ) {
                 debugger;
                 initialiseMap();

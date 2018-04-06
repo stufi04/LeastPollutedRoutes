@@ -10,9 +10,9 @@ public final class GraphNetwork {
     private static Map<Integer, List<Integer>> neighbors = new HashMap<Integer, List<Integer>>();
     private static int source, target;
     private static KDTree kdTree, airspecksTree;
-    public static String route;
+    //public static String routeString;
     public static ArrayList<Point> routePoints;
-    public static int routeNodesNum = 0;
+    //public static int routeNodesNum = 0;
     public static ArrayList<ArrayList<Point>> separateRoutes = new ArrayList<>();
     public static List<Point> airspeckPositions = new ArrayList<>();
     public static List<Point> finalAirspecks = new ArrayList<>();
@@ -27,12 +27,12 @@ public final class GraphNetwork {
         target = t;
     }
 
-    public static String getRoute() {
-        return route;
-    }
+    //public static String getRouteString() {
+    //    return routeString;
+    //}
 
 
-    public static double aStar() {
+    public static Route aStar() {
 
         long startTime = System.currentTimeMillis();
 
@@ -45,12 +45,14 @@ public final class GraphNetwork {
         Point t = points.get(target-1);
         queue.add(s);
 
+        double[] dist = new double[100001];
         double[] pollution = new double[100001];
         int[] parent = new int[100001];
         boolean[] settled = new boolean[100001];
 
         Arrays.fill(pollution, 3000000000.0);
 
+        dist[source] = 0;
         pollution[source] = s.getPollution();
 
         while(!queue.isEmpty()) {
@@ -66,6 +68,7 @@ public final class GraphNetwork {
                     Point neighbor = points.get(i-1);
                     if (pollution[i] > pollution[curNode]+neighbor.getPollution()) {
                         pollution[i] = pollution[curNode]+neighbor.getPollution();
+                        dist[i] = dist[curNode] + neighbor.getHarvesineDistance(p);
                         neighbor.setTotalPollution(pollution[i] + 70 * neighbor.getHarvesineDistance(t));
                         parent[i] = curNode;
                         queue.add(neighbor);
@@ -75,67 +78,19 @@ public final class GraphNetwork {
 
         }
 
-        route = GraphNetwork.saveRouteNodes(points, target, parent);
+        routePoints = new ArrayList<Point>();
+        String routeString = GraphNetwork.saveRouteNodes(points, target, parent);
+
+        Route route = new Route(routePoints, routeString, dist[target], pollution[target]);
 
         long endTime = System.currentTimeMillis();
-        System.out.println(endTime-startTime);
+        System.out.println("Execution time A*: " + (endTime-startTime));
 
-        return pollution[target];
+        return route;
 
     }
 
-    public static double dijkstraByPollution() {
-
-        long startTime = System.currentTimeMillis();
-
-        PriorityQueue<Point> queue = new PriorityQueue<>(11, new Comparator<Point>() {
-            public int compare(Point p1, Point p2) {
-                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
-            }
-        });
-        Point s = points.get(source-1);
-        queue.add(s);
-
-        double[] pollution = new double[100001];
-        int[] parent = new int[100001];
-        boolean[] settled = new boolean[100001];
-
-        Arrays.fill(pollution, 3000000000.0);
-
-        pollution[source] = s.getPollution();
-
-        while(!queue.isEmpty()) {
-
-            Point p = queue.poll();
-            Integer curNode = p.getIndex();
-            settled[curNode] = true;
-
-            if (curNode == target) break;
-
-            for(Integer i : neighbors.get(curNode)) {
-                if (!settled[i]) {
-                    Point neighbor = points.get(i-1);
-                    if (pollution[i] > pollution[curNode]+neighbor.getPollution()) {
-                        pollution[i] = pollution[curNode]+neighbor.getPollution();
-                        neighbor.setTotalPollution(pollution[i]);
-                        parent[i] = curNode;
-                        queue.add(neighbor);
-                    }
-                }
-            }
-
-        }
-
-        route = GraphNetwork.saveRouteNodes(points, target, parent);
-
-        long endTime = System.currentTimeMillis();
-        System.out.println(endTime-startTime);
-
-        return pollution[target];
-
-    }
-
-    public static double dijkstraByDistance() {
+    public static Route dijkstraByPollution() {
 
         long startTime = System.currentTimeMillis();
 
@@ -148,12 +103,71 @@ public final class GraphNetwork {
         queue.add(s);
 
         double[] dist = new double[100001];
+        double[] pollution = new double[100001];
+        int[] parent = new int[100001];
+        boolean[] settled = new boolean[100001];
+
+        Arrays.fill(pollution, 3000000000.0);
+
+        dist[source] = 0;
+        pollution[source] = s.getPollution();
+
+        while(!queue.isEmpty()) {
+
+            Point p = queue.poll();
+            Integer curNode = p.getIndex();
+            settled[curNode] = true;
+
+            if (curNode == target) break;
+
+            for(Integer i : neighbors.get(curNode)) {
+                if (!settled[i]) {
+                    Point neighbor = points.get(i-1);
+                    if (pollution[i] > pollution[curNode]+neighbor.getPollution()) {
+                        pollution[i] = pollution[curNode]+neighbor.getPollution();
+                        dist[i] = dist[curNode] + neighbor.getHarvesineDistance(p);
+                        neighbor.setTotalPollution(pollution[i]);
+                        parent[i] = curNode;
+                        queue.add(neighbor);
+                    }
+                }
+            }
+
+        }
+
+        routePoints = new ArrayList<Point>();
+        String routeString = GraphNetwork.saveRouteNodes(points, target, parent);
+
+        Route route = new Route(routePoints, routeString, dist[target], pollution[target]);
+
+        long endTime = System.currentTimeMillis();
+        System.out.println("Execution time Dijkstra: " + (endTime-startTime));
+
+        return route;
+
+    }
+
+    public static Route dijkstraByDistance() {
+
+        long startTime = System.currentTimeMillis();
+
+        PriorityQueue<Point> queue = new PriorityQueue<>(11, new Comparator<Point>() {
+            public int compare(Point p1, Point p2) {
+                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
+            }
+        });
+        Point s = points.get(source-1);
+        queue.add(s);
+
+        double[] dist = new double[100001];
+        double[] pol = new double[100001];
         int[] parent = new int[100001];
         boolean[] settled = new boolean[100001];
 
         Arrays.fill(dist, 3000000000.0);
 
         dist[source] = 0;
+        pol[source] = s.getPollution();
 
         while(!queue.isEmpty()) {
 
@@ -169,6 +183,7 @@ public final class GraphNetwork {
                     Double d = p.getHarvesineDistance(neighbor);
                     if (dist[i] > dist[curNode] + d) {
                         dist[i] = dist[curNode] + d;
+                        pol[i] = pol[curNode] + neighbor.getPollution();
                         neighbor.setTotalPollution(dist[i]);
                         parent[i] = curNode;
                         queue.add(neighbor);
@@ -178,16 +193,291 @@ public final class GraphNetwork {
 
         }
 
-        route = GraphNetwork.saveRouteNodes(points, target, parent);
+        routePoints = new ArrayList<Point>();
+        String routeString = GraphNetwork.saveRouteNodes(points, target, parent);
+
+        Route route = new Route(routePoints, routeString, dist[target], pol[target]);
 
         long endTime = System.currentTimeMillis();
         System.out.println(endTime-startTime);
 
-        return dist[target];
+        return route;
 
     }
 
-    public static double bidirectionalDijkstraByDistance() {
+//    public static double bidirectionalDijkstraByDistance() {
+//
+//        long startTime = System.currentTimeMillis();
+//
+//        PriorityQueue<Point> queue_forward = new PriorityQueue<>(11, new Comparator<Point>() {
+//            public int compare(Point p1, Point p2) {
+//                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
+//            }
+//        });
+//        PriorityQueue<Point> queue_backward = new PriorityQueue<>(11, new Comparator<Point>() {
+//            public int compare(Point p1, Point p2) {
+//                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
+//            }
+//        });
+//        Point s = points.get(source-1);
+//        Point t = points.get(target-1);
+//        queue_forward.add(s);
+//        queue_backward.add(t);
+//
+//        double[] dist_forward = new double[100001];
+//        double[] dist_backward = new double[100001];
+//        int[] parent_forward = new int[100001];
+//        int[] parent_backward = new int[100001];
+//        boolean[] settled_forward = new boolean[100001];
+//        boolean[] settled_backward = new boolean[100001];
+//
+//        Arrays.fill(dist_forward, 3000000000.0);
+//        Arrays.fill(dist_backward, 3000000000.0);
+//
+//        dist_forward[source] = 0;
+//        dist_backward[target] = 0;
+//
+//        boolean turnFlag = true;
+//        double shortestPathLength = 0;
+//        int meetingPoint = 0;
+//
+//        while(true) {
+//
+//            if (turnFlag && queue_forward.isEmpty()) continue;
+//            if (!turnFlag && queue_backward.isEmpty()) continue;
+//            if (queue_forward.isEmpty() && queue_backward.isEmpty()) break;
+//
+//            if (turnFlag) {
+//                Point p = queue_forward.poll();
+//                Integer curNode = p.getIndex();
+//                while (settled_forward[curNode]) {
+//                    p = queue_forward.poll();
+//                    curNode = p.getIndex();
+//                }
+//                settled_forward[curNode] = true;
+//
+//                if (settled_backward[curNode] == true) {
+//                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode]; //-p.getPollution()
+//                    meetingPoint = curNode;
+//                    break;
+//                }
+//
+//                for(Integer i : neighbors.get(curNode)) {
+//                    if (!settled_forward[i]) {
+//                        Point neighbor = points.get(i-1);
+//                        Double d = p.getHarvesineDistance(neighbor);
+//                        if (dist_forward[i] > dist_forward[curNode] + d) {
+//                            dist_forward[i] = dist_forward[curNode] + d;
+//                            neighbor.setTotalPollution(dist_forward[i]);
+//                            parent_forward[i] = curNode;
+//                            queue_forward.add(neighbor);
+//                        }
+//                    }
+//                }
+//            } else {
+//                Point p = queue_backward.poll();
+//                Integer curNode = p.getIndex();
+//                while (settled_backward[curNode]) {
+//                    p = queue_backward.poll();
+//                    curNode = p.getIndex();
+//                }
+//                settled_backward[curNode] = true;
+//
+//                if (settled_forward[curNode] == true) {
+//                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode]; // - p.getPollution();
+//                    meetingPoint = curNode;
+//                    break;
+//                }
+//
+//                for(Integer i : neighbors.get(curNode)) {
+//                    if (!settled_backward[i]) {
+//                        Point neighbor = points.get(i-1);
+//                        Double d = p.getHarvesineDistance(neighbor);
+//                        if (dist_backward[i] > dist_backward[curNode] + d) {
+//                            dist_backward[i] = dist_backward[curNode] + d;
+//                            neighbor.setTotalPollution(dist_backward[i]);
+//                            parent_backward[i] = curNode;
+//                            queue_backward.add(neighbor);
+//                        }
+//                    }
+//                }
+//            }
+//
+//            turnFlag = !turnFlag;
+//        }
+//
+//        if (shortestPathLength == 0) return 0;
+//        while(!queue_forward.isEmpty()) {
+//            Point p = queue_forward.poll();
+//            Integer curNode = p.getIndex();
+//            for(Integer i : neighbors.get(curNode)) {
+//                Point neighbor = points.get(i-1);
+//                Double d = p.getHarvesineDistance(neighbor);
+//                if (shortestPathLength > dist_forward[curNode] + dist_backward[i] + d) {
+//                    shortestPathLength = dist_forward[curNode] + dist_backward[i] + d;
+//                    parent_forward[i] = curNode;
+//                    meetingPoint = i;
+//                }
+//            }
+//        }
+//        while(!queue_backward.isEmpty()) {
+//            Point p = queue_backward.poll();
+//            Integer curNode = p.getIndex();
+//            for(Integer i : neighbors.get(curNode)) {
+//                Point neighbor = points.get(i-1);
+//                Double d = p.getHarvesineDistance(neighbor);
+//                if (shortestPathLength > dist_backward[curNode] + dist_forward[i] + d) {
+//                    shortestPathLength = dist_backward[curNode] + dist_forward[i] + d;
+//                    parent_forward[i] = curNode;
+//                    meetingPoint = i;
+//                }
+//            }
+//        }
+//
+//        routeString = saveRouteNodesReversed(points, meetingPoint, parent_backward) + GraphNetwork.saveRouteNodes(points, meetingPoint, parent_forward);
+//
+//        long endTime = System.currentTimeMillis();
+//        System.out.println("Execution time: " + (endTime-startTime));
+//
+//        return shortestPathLength;
+//
+//    }
+//
+//    public static double bidirectionalDijkstraByPollution() {
+//
+//        long startTime = System.currentTimeMillis();
+//
+//        PriorityQueue<Point> queue_forward = new PriorityQueue<>(11, new Comparator<Point>() {
+//            public int compare(Point p1, Point p2) {
+//                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
+//            }
+//        });
+//        PriorityQueue<Point> queue_backward = new PriorityQueue<>(11, new Comparator<Point>() {
+//            public int compare(Point p1, Point p2) {
+//                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
+//            }
+//        });
+//        Point s = points.get(source-1);
+//        Point t = points.get(target-1);
+//        queue_forward.add(s);
+//        queue_backward.add(t);
+//
+//        double[] dist_forward = new double[100001];
+//        double[] dist_backward = new double[100001];
+//        int[] parent_forward = new int[100001];
+//        int[] parent_backward = new int[100001];
+//        boolean[] settled_forward = new boolean[100001];
+//        boolean[] settled_backward = new boolean[100001];
+//
+//        Arrays.fill(dist_forward, 3000000000.0);
+//        Arrays.fill(dist_backward, 3000000000.0);
+//
+//        dist_forward[source] = s.getPollution();
+//        dist_backward[target] = t.getPollution();
+//
+//        boolean turnFlag = true;
+//        double shortestPathLength = 0;
+//        int meetingPoint = 0;
+//
+//        while(true) {
+//
+//            if (turnFlag && queue_forward.isEmpty()) continue;
+//            if (!turnFlag && queue_backward.isEmpty()) continue;
+//            if (queue_forward.isEmpty() && queue_backward.isEmpty()) break;
+//
+//            if (turnFlag) {
+//                Point p = queue_forward.poll();
+//                Integer curNode = p.getIndex();
+//                while (settled_forward[curNode]) {
+//                    p = queue_forward.poll();
+//                    curNode = p.getIndex();
+//                }
+//                settled_forward[curNode] = true;
+//
+//                if (settled_backward[curNode] == true) {
+//                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode] - p.getPollution();
+//                    meetingPoint = curNode;
+//                    break;
+//                }
+//
+//                for(Integer i : neighbors.get(curNode)) {
+//                    if (!settled_forward[i]) {
+//                        Point neighbor = points.get(i-1);
+//                        Double d = neighbor.getPollution();
+//                        if (dist_forward[i] > dist_forward[curNode] + d) {
+//                            dist_forward[i] = dist_forward[curNode] + d;
+//                            neighbor.setTotalPollution(dist_forward[i]);
+//                            parent_forward[i] = curNode;
+//                            queue_forward.add(neighbor);
+//                        }
+//                    }
+//                }
+//            } else {
+//                Point p = queue_backward.poll();
+//                Integer curNode = p.getIndex();
+//                while (settled_backward[curNode]) {
+//                    p = queue_backward.poll();
+//                    curNode = p.getIndex();
+//                }
+//                settled_backward[curNode] = true;
+//
+//                if (settled_forward[curNode] == true) {
+//                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode] - p.getPollution();
+//                    meetingPoint = curNode;
+//                    break;
+//                }
+//
+//                for(Integer i : neighbors.get(curNode)) {
+//                    if (!settled_backward[i]) {
+//                        Point neighbor = points.get(i-1);
+//                        Double d = neighbor.getPollution();
+//                        if (dist_backward[i] > dist_backward[curNode] + d) {
+//                            dist_backward[i] = dist_backward[curNode] + d;
+//                            neighbor.setTotalPollution(dist_backward[i]);
+//                            parent_backward[i] = curNode;
+//                            queue_backward.add(neighbor);
+//                        }
+//                    }
+//                }
+//            }
+//
+//            turnFlag = !turnFlag;
+//        }
+//
+//        if (shortestPathLength == 0) return 0;
+//        while(!queue_forward.isEmpty()) {
+//            Point p = queue_forward.poll();
+//            Integer curNode = p.getIndex();
+//            for(Integer i : neighbors.get(curNode)) {
+//                if (shortestPathLength > dist_forward[curNode] + dist_backward[i]) {
+//                    shortestPathLength = dist_forward[curNode] + dist_backward[i];
+//                    parent_forward[i] = curNode;
+//                    meetingPoint = i;
+//                }
+//            }
+//        }
+//        while(!queue_backward.isEmpty()) {
+//            Point p = queue_backward.poll();
+//            Integer curNode = p.getIndex();
+//            for(Integer i : neighbors.get(curNode)) {
+//                if (shortestPathLength > dist_backward[curNode] + dist_forward[i]) {
+//                    shortestPathLength = dist_backward[curNode] + dist_forward[i];
+//                    parent_forward[i] = curNode;
+//                    meetingPoint = i;
+//                }
+//            }
+//        }
+//
+//        routeString = saveRouteNodesReversed(points, meetingPoint, parent_backward) + GraphNetwork.saveRouteNodes(points, meetingPoint, parent_forward);
+//
+//        long endTime = System.currentTimeMillis();
+//        System.out.println("Execution time: " + (endTime-startTime));
+//
+//        return shortestPathLength;
+//
+//    }
+
+    public static Route bidirectionalAStar() {
 
         long startTime = System.currentTimeMillis();
 
@@ -206,6 +496,8 @@ public final class GraphNetwork {
         queue_forward.add(s);
         queue_backward.add(t);
 
+        double[] pol_forward = new double[100001];
+        double[] pol_backward = new double[100001];
         double[] dist_forward = new double[100001];
         double[] dist_backward = new double[100001];
         int[] parent_forward = new int[100001];
@@ -213,14 +505,17 @@ public final class GraphNetwork {
         boolean[] settled_forward = new boolean[100001];
         boolean[] settled_backward = new boolean[100001];
 
-        Arrays.fill(dist_forward, 3000000000.0);
-        Arrays.fill(dist_backward, 3000000000.0);
+        Arrays.fill(pol_forward, 3000000000.0);
+        Arrays.fill(pol_backward, 3000000000.0);
 
+        pol_forward[source] = s.getPollution();
+        pol_backward[target] = t.getPollution();
         dist_forward[source] = 0;
         dist_backward[target] = 0;
 
         boolean turnFlag = true;
-        double shortestPathLength = 0;
+        double leastPollution = 0;
+        double distance = 0;
         int meetingPoint = 0;
 
         while(true) {
@@ -239,7 +534,8 @@ public final class GraphNetwork {
                 settled_forward[curNode] = true;
 
                 if (settled_backward[curNode] == true) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode]; //-p.getPollution()
+                    leastPollution = pol_forward[curNode] + pol_backward[curNode] - p.getPollution();
+                    distance = dist_forward[curNode] + dist_backward[curNode];
                     meetingPoint = curNode;
                     break;
                 }
@@ -247,10 +543,11 @@ public final class GraphNetwork {
                 for(Integer i : neighbors.get(curNode)) {
                     if (!settled_forward[i]) {
                         Point neighbor = points.get(i-1);
-                        Double d = p.getHarvesineDistance(neighbor);
-                        if (dist_forward[i] > dist_forward[curNode] + d) {
-                            dist_forward[i] = dist_forward[curNode] + d;
-                            neighbor.setTotalPollution(dist_forward[i]);
+                        Double d = neighbor.getPollution();
+                        if (pol_forward[i] > pol_forward[curNode] + d) {
+                            pol_forward[i] = pol_forward[curNode] + d;
+                            dist_forward[i] = dist_forward[curNode] + neighbor.getHarvesineDistance(p);
+                            neighbor.setTotalPollution(pol_forward[i] + 70 * neighbor.getHarvesineDistance(t));
                             parent_forward[i] = curNode;
                             queue_forward.add(neighbor);
                         }
@@ -266,7 +563,8 @@ public final class GraphNetwork {
                 settled_backward[curNode] = true;
 
                 if (settled_forward[curNode] == true) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode]; // - p.getPollution();
+                    leastPollution = pol_forward[curNode] + pol_backward[curNode] - p.getPollution();
+                    distance = dist_forward[curNode] + dist_backward[curNode];
                     meetingPoint = curNode;
                     break;
                 }
@@ -274,10 +572,11 @@ public final class GraphNetwork {
                 for(Integer i : neighbors.get(curNode)) {
                     if (!settled_backward[i]) {
                         Point neighbor = points.get(i-1);
-                        Double d = p.getHarvesineDistance(neighbor);
-                        if (dist_backward[i] > dist_backward[curNode] + d) {
-                            dist_backward[i] = dist_backward[curNode] + d;
-                            neighbor.setTotalPollution(dist_backward[i]);
+                        Double d = neighbor.getPollution();
+                        if (pol_backward[i] > pol_backward[curNode] + d) {
+                            pol_backward[i] = pol_backward[curNode] + d;
+                            dist_backward[i] = dist_backward[curNode] + neighbor.getHarvesineDistance(p);
+                            neighbor.setTotalPollution(pol_backward[i] + 70 * neighbor.getHarvesineDistance(s));
                             parent_backward[i] = curNode;
                             queue_backward.add(neighbor);
                         }
@@ -288,15 +587,14 @@ public final class GraphNetwork {
             turnFlag = !turnFlag;
         }
 
-        if (shortestPathLength == 0) return 0;
+        if (leastPollution == 0) return null;
         while(!queue_forward.isEmpty()) {
             Point p = queue_forward.poll();
             Integer curNode = p.getIndex();
             for(Integer i : neighbors.get(curNode)) {
-                Point neighbor = points.get(i-1);
-                Double d = p.getHarvesineDistance(neighbor);
-                if (shortestPathLength > dist_forward[curNode] + dist_backward[i] + d) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[i] + d;
+                if (leastPollution > pol_forward[curNode] + pol_backward[i]) {
+                    leastPollution = pol_forward[curNode] + pol_backward[i];
+                    distance = dist_forward[curNode] + dist_backward[curNode];
                     parent_forward[i] = curNode;
                     meetingPoint = i;
                 }
@@ -306,290 +604,24 @@ public final class GraphNetwork {
             Point p = queue_backward.poll();
             Integer curNode = p.getIndex();
             for(Integer i : neighbors.get(curNode)) {
-                Point neighbor = points.get(i-1);
-                Double d = p.getHarvesineDistance(neighbor);
-                if (shortestPathLength > dist_backward[curNode] + dist_forward[i] + d) {
-                    shortestPathLength = dist_backward[curNode] + dist_forward[i] + d;
+                if (leastPollution > pol_backward[curNode] + pol_forward[i]) {
+                    leastPollution = pol_backward[curNode] + pol_forward[i];
+                    distance = dist_forward[curNode] + dist_backward[curNode];
                     parent_forward[i] = curNode;
                     meetingPoint = i;
                 }
             }
         }
 
-        route = saveRouteNodesReversed(points, meetingPoint, parent_backward) + GraphNetwork.saveRouteNodes(points, meetingPoint, parent_forward);
+        routePoints = new ArrayList<Point>();
+        String routeString = saveRouteNodesReversed(points, meetingPoint, parent_backward) + GraphNetwork.saveRouteNodes(points, meetingPoint, parent_forward);
+
+        Route route = new Route(routePoints, routeString, distance, leastPollution);
 
         long endTime = System.currentTimeMillis();
-        System.out.println("Execution time: " + (endTime-startTime));
+        System.out.println("Execution time Bidirectional A*: " + (endTime-startTime));
 
-        return shortestPathLength;
-
-    }
-
-    public static double bidirectionalDijkstraByPollution() {
-
-        long startTime = System.currentTimeMillis();
-
-        PriorityQueue<Point> queue_forward = new PriorityQueue<>(11, new Comparator<Point>() {
-            public int compare(Point p1, Point p2) {
-                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
-            }
-        });
-        PriorityQueue<Point> queue_backward = new PriorityQueue<>(11, new Comparator<Point>() {
-            public int compare(Point p1, Point p2) {
-                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
-            }
-        });
-        Point s = points.get(source-1);
-        Point t = points.get(target-1);
-        queue_forward.add(s);
-        queue_backward.add(t);
-
-        double[] dist_forward = new double[100001];
-        double[] dist_backward = new double[100001];
-        int[] parent_forward = new int[100001];
-        int[] parent_backward = new int[100001];
-        boolean[] settled_forward = new boolean[100001];
-        boolean[] settled_backward = new boolean[100001];
-
-        Arrays.fill(dist_forward, 3000000000.0);
-        Arrays.fill(dist_backward, 3000000000.0);
-
-        dist_forward[source] = s.getPollution();
-        dist_backward[target] = t.getPollution();
-
-        boolean turnFlag = true;
-        double shortestPathLength = 0;
-        int meetingPoint = 0;
-
-        while(true) {
-
-            if (turnFlag && queue_forward.isEmpty()) continue;
-            if (!turnFlag && queue_backward.isEmpty()) continue;
-            if (queue_forward.isEmpty() && queue_backward.isEmpty()) break;
-
-            if (turnFlag) {
-                Point p = queue_forward.poll();
-                Integer curNode = p.getIndex();
-                while (settled_forward[curNode]) {
-                    p = queue_forward.poll();
-                    curNode = p.getIndex();
-                }
-                settled_forward[curNode] = true;
-
-                if (settled_backward[curNode] == true) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode] - p.getPollution();
-                    meetingPoint = curNode;
-                    break;
-                }
-
-                for(Integer i : neighbors.get(curNode)) {
-                    if (!settled_forward[i]) {
-                        Point neighbor = points.get(i-1);
-                        Double d = neighbor.getPollution();
-                        if (dist_forward[i] > dist_forward[curNode] + d) {
-                            dist_forward[i] = dist_forward[curNode] + d;
-                            neighbor.setTotalPollution(dist_forward[i]);
-                            parent_forward[i] = curNode;
-                            queue_forward.add(neighbor);
-                        }
-                    }
-                }
-            } else {
-                Point p = queue_backward.poll();
-                Integer curNode = p.getIndex();
-                while (settled_backward[curNode]) {
-                    p = queue_backward.poll();
-                    curNode = p.getIndex();
-                }
-                settled_backward[curNode] = true;
-
-                if (settled_forward[curNode] == true) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode] - p.getPollution();
-                    meetingPoint = curNode;
-                    break;
-                }
-
-                for(Integer i : neighbors.get(curNode)) {
-                    if (!settled_backward[i]) {
-                        Point neighbor = points.get(i-1);
-                        Double d = neighbor.getPollution();
-                        if (dist_backward[i] > dist_backward[curNode] + d) {
-                            dist_backward[i] = dist_backward[curNode] + d;
-                            neighbor.setTotalPollution(dist_backward[i]);
-                            parent_backward[i] = curNode;
-                            queue_backward.add(neighbor);
-                        }
-                    }
-                }
-            }
-
-            turnFlag = !turnFlag;
-        }
-
-        if (shortestPathLength == 0) return 0;
-        while(!queue_forward.isEmpty()) {
-            Point p = queue_forward.poll();
-            Integer curNode = p.getIndex();
-            for(Integer i : neighbors.get(curNode)) {
-                if (shortestPathLength > dist_forward[curNode] + dist_backward[i]) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[i];
-                    parent_forward[i] = curNode;
-                    meetingPoint = i;
-                }
-            }
-        }
-        while(!queue_backward.isEmpty()) {
-            Point p = queue_backward.poll();
-            Integer curNode = p.getIndex();
-            for(Integer i : neighbors.get(curNode)) {
-                if (shortestPathLength > dist_backward[curNode] + dist_forward[i]) {
-                    shortestPathLength = dist_backward[curNode] + dist_forward[i];
-                    parent_forward[i] = curNode;
-                    meetingPoint = i;
-                }
-            }
-        }
-
-        route = saveRouteNodesReversed(points, meetingPoint, parent_backward) + GraphNetwork.saveRouteNodes(points, meetingPoint, parent_forward);
-
-        long endTime = System.currentTimeMillis();
-        System.out.println("Execution time: " + (endTime-startTime));
-
-        return shortestPathLength;
-
-    }
-
-    public static double bidirectionalAStar() {
-
-        long startTime = System.currentTimeMillis();
-
-        PriorityQueue<Point> queue_forward = new PriorityQueue<>(11, new Comparator<Point>() {
-            public int compare(Point p1, Point p2) {
-                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
-            }
-        });
-        PriorityQueue<Point> queue_backward = new PriorityQueue<>(11, new Comparator<Point>() {
-            public int compare(Point p1, Point p2) {
-                return Double.compare(p1.getTotalPollution(), p2.getTotalPollution());
-            }
-        });
-        Point s = points.get(source-1);
-        Point t = points.get(target-1);
-        queue_forward.add(s);
-        queue_backward.add(t);
-
-        double[] dist_forward = new double[100001];
-        double[] dist_backward = new double[100001];
-        int[] parent_forward = new int[100001];
-        int[] parent_backward = new int[100001];
-        boolean[] settled_forward = new boolean[100001];
-        boolean[] settled_backward = new boolean[100001];
-
-        Arrays.fill(dist_forward, 3000000000.0);
-        Arrays.fill(dist_backward, 3000000000.0);
-
-        dist_forward[source] = s.getPollution();
-        dist_backward[target] = t.getPollution();
-
-        boolean turnFlag = true;
-        double shortestPathLength = 0;
-        int meetingPoint = 0;
-
-        while(true) {
-
-            if (turnFlag && queue_forward.isEmpty()) continue;
-            if (!turnFlag && queue_backward.isEmpty()) continue;
-            if (queue_forward.isEmpty() && queue_backward.isEmpty()) break;
-
-            if (turnFlag) {
-                Point p = queue_forward.poll();
-                Integer curNode = p.getIndex();
-                while (settled_forward[curNode]) {
-                    p = queue_forward.poll();
-                    curNode = p.getIndex();
-                }
-                settled_forward[curNode] = true;
-
-                if (settled_backward[curNode] == true) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode] - p.getPollution();
-                    meetingPoint = curNode;
-                    break;
-                }
-
-                for(Integer i : neighbors.get(curNode)) {
-                    if (!settled_forward[i]) {
-                        Point neighbor = points.get(i-1);
-                        Double d = neighbor.getPollution();
-                        if (dist_forward[i] > dist_forward[curNode] + d) {
-                            dist_forward[i] = dist_forward[curNode] + d;
-                            neighbor.setTotalPollution(dist_forward[i] + 70 * neighbor.getHarvesineDistance(t));
-                            parent_forward[i] = curNode;
-                            queue_forward.add(neighbor);
-                        }
-                    }
-                }
-            } else {
-                Point p = queue_backward.poll();
-                Integer curNode = p.getIndex();
-                while (settled_backward[curNode]) {
-                    p = queue_backward.poll();
-                    curNode = p.getIndex();
-                }
-                settled_backward[curNode] = true;
-
-                if (settled_forward[curNode] == true) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[curNode] - p.getPollution();
-                    meetingPoint = curNode;
-                    break;
-                }
-
-                for(Integer i : neighbors.get(curNode)) {
-                    if (!settled_backward[i]) {
-                        Point neighbor = points.get(i-1);
-                        Double d = neighbor.getPollution();
-                        if (dist_backward[i] > dist_backward[curNode] + d) {
-                            dist_backward[i] = dist_backward[curNode] + d;
-                            neighbor.setTotalPollution(dist_backward[i] + 70 * neighbor.getHarvesineDistance(s));
-                            parent_backward[i] = curNode;
-                            queue_backward.add(neighbor);
-                        }
-                    }
-                }
-            }
-
-            turnFlag = !turnFlag;
-        }
-
-        if (shortestPathLength == 0) return 0;
-        while(!queue_forward.isEmpty()) {
-            Point p = queue_forward.poll();
-            Integer curNode = p.getIndex();
-            for(Integer i : neighbors.get(curNode)) {
-                if (shortestPathLength > dist_forward[curNode] + dist_backward[i]) {
-                    shortestPathLength = dist_forward[curNode] + dist_backward[i];
-                    parent_forward[i] = curNode;
-                    meetingPoint = i;
-                }
-            }
-        }
-        while(!queue_backward.isEmpty()) {
-            Point p = queue_backward.poll();
-            Integer curNode = p.getIndex();
-            for(Integer i : neighbors.get(curNode)) {
-                if (shortestPathLength > dist_backward[curNode] + dist_forward[i]) {
-                    shortestPathLength = dist_backward[curNode] + dist_forward[i];
-                    parent_forward[i] = curNode;
-                    meetingPoint = i;
-                }
-            }
-        }
-
-        route = saveRouteNodesReversed(points, meetingPoint, parent_backward) + GraphNetwork.saveRouteNodes(points, meetingPoint, parent_forward);
-
-        long endTime = System.currentTimeMillis();
-        System.out.println("Execution time: " + (endTime-startTime));
-
-        return shortestPathLength;
+        return route;
 
 
     }
@@ -602,7 +634,6 @@ public final class GraphNetwork {
             str += points.get(curNode-1).getLatitute() + " " + points.get(curNode-1).getLongitude() + "\n";
             routePoints.add(points.get(curNode-1));
             curNode = parent[curNode];
-            routeNodesNum++;
         }
         return str;
 
@@ -616,7 +647,6 @@ public final class GraphNetwork {
             str = points.get(curNode-1).getLatitute() + " " + points.get(curNode-1).getLongitude() + "\n" + str;
             routePoints.add(0, points.get(curNode-1));
             curNode = parent[curNode];
-            routeNodesNum++;
         }
         return str;
 
@@ -641,8 +671,8 @@ public final class GraphNetwork {
         points = DataIO.readPointsWithID();
         //points = DataIO.readPointsWithPollution();
         //points = DataIO.generatePollutionAccordingToRoads(points);
-        if (pollutionGrid == null || pollutionGrid.isEmpty()) {
-            points = DataIO.generatePollutionAccordingToRoads(points);
+        if (pollutionGrid == null || pollutionGrid.isEmpty() || pollutionGrid.equals("null")) {
+            //points = DataIO.generatePollutionAccordingToRoads(points);
         } else {
             List<Point> gridPoints = DataIO.getPointsFromRawGrid(pollutionGrid);
             KDTree gridTree = new KDTree(gridPoints, true);
@@ -663,7 +693,7 @@ public final class GraphNetwork {
 
     }
 
-    public static void findRoute(double lat1, double lng1, double lat2, double lng2) {
+    public static String findRoute(double lat1, double lng1, double lat2, double lng2) {
 
         Point s = kdTree.findNearest(lat1, lng1, true);
         Point t = kdTree.findNearest(lat2, lng2, true);
@@ -674,9 +704,22 @@ public final class GraphNetwork {
         GraphNetwork.setTarget(target);
 
         routePoints = new ArrayList<>();
-        double leastPollution = GraphNetwork.bidirectionalAStar();
+        Route shortestRoute = GraphNetwork.dijkstraByDistance();
+        //Route anotherRoute = GraphNetwork.aStar();
+        Route leastPollutedRoute = GraphNetwork.bidirectionalAStar();
 
-        System.out.println("Least pollution: " + leastPollution);
+
+        System.out.println("LEAST POLLUTED ROUTE");
+        System.out.println("pollution: " + leastPollutedRoute.getPollution());
+        System.out.println("distance: " + leastPollutedRoute.getDist());
+        System.out.println("SHORTEST ROUTE");
+        System.out.println("pollution: " + shortestRoute.getPollution());
+        System.out.println("distance: " + shortestRoute.getDist());
+
+        return leastPollutedRoute.getRouteString() + "X" + shortestRoute.getRouteString();
+
+       // System.out.println("Nodes:" + routeNodesNum);
+       // System.out.println("Harvesine:" + s.getHarvesineDistance(t));
 
         // print source, target and distances between actual user input points
 //        System.out.println(lat1 + " " + lng1 + " " + lat2 + " " + lng2);
@@ -710,9 +753,8 @@ public final class GraphNetwork {
             target = home.getIndex();
             GraphNetwork.setSource(source);
             GraphNetwork.setTarget(target);
-            routePoints = new ArrayList<>();
-            double leastPollution = GraphNetwork.bidirectionalAStar();
-            routes += route + "@";
+            Route r = GraphNetwork.bidirectionalAStar();
+            routes += r.getRouteString() + "@";
             Collections.reverse(routePoints);
             separateRoutes.add(routePoints);
         }
